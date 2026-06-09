@@ -47,7 +47,6 @@ Real data work, documented honestly:
 - **Anxiety dataset had no negative class** — the source contained only positive (anxious) examples; negatives were approximated using non-distressed text from the depression dataset. *(Honest limitation: the model partly learns "anxious vs. normal-language" — see Limitations.)*
 - **Depression length bias** — depressed and non-depressed samples differed sharply in average text length, so the model was partly learning length instead of content; mitigated by truncation and balanced sampling to 3,000 per class.
 - **Eating-behavior label noise** — inconsistent casing and whitespace in labels; normalized during preprocessing.
-- **scikit-learn 1.9 breaking change** — `multi_class` parameter removed from `LogisticRegression`; updated pipeline accordingly.
 - **pandas 2.x breaking change** — `groupby().apply()` behavior changed; fixed aggregation logic.
 - **Non-interactive notebook execution** — `input()` cells replaced with default fallback for headless execution via `nbconvert`.
 

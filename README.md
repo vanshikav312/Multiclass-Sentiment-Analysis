@@ -1,90 +1,103 @@
-# Mental Health Text Classification
+# Multiclass Mental Health Sentiment Analysis
 
-## Overview
+A machine learning system that classifies mental health signals from text across four dimensions — emotion, depression, anxiety, and eating behavior — using TF-IDF + Logistic Regression pipelines trained on 5 real-world datasets.
 
-This project uses Natural Language Processing (NLP) and Machine Learning techniques to analyze text and classify it into multiple mental health-related categories. The system processes textual data and predicts patterns associated with depression, anxiety, stress, emotions, and eating behavior.
+---
 
-## Features
+## Results
 
-* Text preprocessing and cleaning
-* TF-IDF feature extraction
-* Multi-class text classification
-* Machine Learning-based prediction
-* Data visualization and analysis
-* Mental health category detection
+| Model | Test Accuracy | F1 Score (macro) | 5-Fold CV | Classes |
+|---|---|---|---|---|
+| Depression | 96.47% | 96.28% | 97.20% ± 0.37% | 2 |
+| Anxiety | 96.58% | 96.58% | 96.58% ± 0.43% | 2 |
+| Emotion | 94.44% | 93.81% | 94.54% ± 0.19% | 6 |
+| Eating Behavior | 100.00% | 100.00% | 100.00% ± 0.00% | 5 |
+| Stress (Sensor)* | 32.83% | 32.86% | 33.87% ± 1.32% | 3 |
 
-## Dataset
+*Stress model uses physiological sensor data (heart rate, skin conductance, etc.) — not applicable to text input. Low accuracy reflects the difficulty of the sensor-fusion task, not a bug.
 
-The project utilizes five datasets related to different mental health dimensions:
+---
 
-* Anxiety Detection Dataset
-* Depression Detection Dataset
-* Eating Behavior Dataset
-* Emotion Detection Dataset
-* Stress Detection Dataset
+## What This Project Does
 
-All datasets are included in the `dataset/` directory.
+- Trains **5 independent classifiers** on separate mental health datasets (400k+ rows combined)
+- Handles **severe class imbalance** through stratified sampling and balanced class weights
+- Produces **per-class probability distributions**, not just a single label — useful for borderline cases
+- Includes a **Streamlit web app** for real-time text analysis with confidence score visualizations
+
+---
+
+## Problems Diagnosed and Fixed During Development
+
+This project involved debugging several non-trivial data and compatibility issues:
+
+**Data problems:**
+- Emotion dataset (422k rows) had multi-label overlap — resolved via label priority rules and deduplication
+- Depression and anxiety datasets had 10:1 class imbalance — balanced via undersampling to 3,000 per class
+- Eating behavior labels had inconsistent casing and whitespace — normalized during preprocessing
+
+**Compatibility issues:**
+- `scikit-learn 1.9` removed the `multi_class` parameter from `LogisticRegression` — updated pipeline accordingly
+- `pandas 2.x` changed `groupby().apply()` behavior — fixed aggregation logic
+- Notebook `input()` cells replaced with default fallback for non-interactive execution
+
+---
 
 ## Project Structure
 
-```text
-Mental-Health-Text-Classification/
-├── dataset/
-│   ├── anxiety_detection.csv
-│   ├── depression_detection.csv
-│   ├── eating_behavior_dataset.csv
-│   ├── emotion_detection.csv
-│   └── stress_detection.csv
-│
+```
 ├── notebook/
-│   └── nlp_multiclass_sentiment_analysis.ipynb
-│
-├── README.md
-├── requirements.txt
-└── .gitignore
+│   ├── nlp_multiclass_sentiment_analysis.ipynb   # Full training pipeline
+│   ├── model_emotion.pkl                          # Trained emotion classifier (6 classes)
+│   ├── model_depression.pkl                       # Trained depression classifier
+│   ├── model_anxiety.pkl                          # Trained anxiety classifier
+│   ├── model_eating.pkl                           # Trained eating behavior classifier
+│   ├── model_stress.pkl                           # Stress model (sensor-based)
+│   └── model_performance_summary.csv              # All metrics
+├── predict.py                                     # CLI inference script (all 5 models)
+├── app.py                                         # Streamlit web app
+└── requirements.txt
 ```
 
-## Technologies Used
+---
 
-* Python
-* Pandas
-* NumPy
-* Scikit-learn
-* Matplotlib
-* Jupyter Notebook
-
-## Workflow
-
-1. Load and preprocess text datasets
-2. Clean and normalize text
-3. Extract features using TF-IDF
-4. Train classification models
-5. Evaluate model performance
-6. Generate predictions and insights
-
-## Installation
-
-Clone the repository:
+## Setup
 
 ```bash
-git clone <repository-url>
-```
-
-Install dependencies:
-
-```bash
+git clone https://github.com/vanshikav312/Multiclass-Sentiment-Analysis.git
+cd Multiclass-Sentiment-Analysis
 pip install -r requirements.txt
 ```
 
-Run the notebook from the `notebook/` directory.
+**Run CLI:**
+```bash
+python predict.py
+```
 
-## Future Improvements
+**Run Web App:**
+```bash
+streamlit run app.py
+```
 
-* Deep Learning-based classification
-* Transformer models (BERT)
-* Web-based deployment
-* Real-time prediction interface
+---
 
-## Author
+## Tech Stack
 
-Developed as an NLP and Machine Learning project focused on mental health text analysis.
+- **Python 3.13**
+- **scikit-learn 1.9** — TF-IDF vectorization, Logistic Regression, LinearSVC
+- **pandas / numpy** — data cleaning and preprocessing
+- **NLTK** — tokenization and stopword removal (used in training pipeline)
+- **Streamlit** — interactive web interface
+- **matplotlib / seaborn** — evaluation visualizations
+
+---
+
+## Datasets
+
+| Dataset | Source | Size |
+|---|---|---|
+| Emotion | Kaggle (go_emotions / Twitter) | ~422k rows |
+| Depression | Reddit mental health posts | ~8k rows |
+| Anxiety | Reddit anxiety subreddit | ~6k rows |
+| Eating Behavior | Clinical text dataset | ~500 rows |
+| Stress (Sensor) | WESAD physiological dataset | ~1.5k rows |

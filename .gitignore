@@ -1,3 +1,11 @@
 .DS_Store
 .ipynb_checkpoints/
 __pycache__/
+
+# Ignore large datasets and images
+*.csv
+*.png
+*.webp
+
+# Keep the performance summary CSV required by the API
+!notebook/model_performance_summary.csv

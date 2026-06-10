@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pandas
+pydantic
+scikit-learn>=1.5.0

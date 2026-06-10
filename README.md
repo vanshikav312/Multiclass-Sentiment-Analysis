@@ -60,11 +60,21 @@ Real data work, documented honestly:
 - **Stress detection (sensor data)** is the weakest model; structured sensor fusion is a harder problem than the text tasks with the available dataset size (~3,000 rows).
 - This is a **research project**, not a validated diagnostic system.
 
----
-
 ## Project Structure
 
 ```
+├── backend/
+│   ├── main.py                                    # FastAPI server, endpoints, and model loading
+│   └── requirements.txt                           # Backend dependencies (fastapi, uvicorn, etc.)
+├── frontend/
+│   ├── package.json                               # React + Vite configuration
+│   ├── src/
+│   │   ├── App.jsx                                # Main dashboard shell and sidebar navigation
+│   │   ├── index.css                              # Glassmorphic dark theme variables (MindfulPalettes No. 96)
+│   │   └── components/
+│   │       ├── Analyzer.jsx                       # Interactive sentiment input and results gauge
+│   │       └── Dashboard.jsx                      # Evaluation metrics charts and explanations
+│   └── vite.config.js                             # Vite setup
 ├── notebook/
 │   ├── nlp_multiclass_sentiment_analysis.ipynb   # Full training pipeline
 │   ├── model_emotion.pkl                          # Emotion classifier (6 classes)
@@ -80,30 +90,65 @@ Real data work, documented honestly:
 
 ---
 
-## Setup
+## Setup & Running Instructions
 
+### 1. Classic App Options
+
+**Install Requirements:**
 ```bash
 git clone https://github.com/vanshikav312/Multiclass-Sentiment-Analysis.git
 cd Multiclass-Sentiment-Analysis
 pip install -r requirements.txt
 ```
 
-**Run CLI:**
+**Run CLI Inference:**
 ```bash
 python predict.py
 ```
 
-**Run Web App:**
+**Run Streamlit App:**
 ```bash
 streamlit run app.py
 ```
 
----
+### 2. Modern React + FastAPI Dashboard
+
+A modern, high-fidelity dark-themed web application styled with glassmorphic panels and standard CSS utilizing the custom "MindfulPalettes No. 96" design system.
+
+#### Run FastAPI Backend:
+1. Navigate to the `backend/` directory:
+   ```bash
+   cd backend
+   ```
+2. Install python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Run the development server:
+   ```bash
+   python -m uvicorn main:app --reload --port 8000
+   ```
+
+#### Run React Frontend:
+1. Navigate to the `frontend/` directory:
+   ```bash
+   cd ../frontend
+   ```
+2. Install Node packages:
+   ```bash
+   npm install
+   ```
+3. Start the Vite server:
+   ```bash
+   npm run dev
+   ```
+4. Access the web app in your browser at `http://localhost:5173`.
+
 
 ## Tech Stack
 
 - **Python 3.13.3**
-- **scikit-learn 1.9.0** — TF-IDF, LinearSVC, CalibratedClassifierCV, Random Forest
+- **scikit-learn (1.5+)** — TF-IDF, LinearSVC, CalibratedClassifierCV, Random Forest
 - **pandas 2.3.0 / numpy 2.0.0** — data cleaning and preprocessing
 - **NLTK 3.9.4** — tokenization and stopword removal (used in training pipeline)
 - **Streamlit** — interactive web interface

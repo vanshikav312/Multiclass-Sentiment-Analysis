@@ -1,6 +1,7 @@
 import pickle
 import os
-import re
+
+from preprocessing import preprocess_text
 
 # Resolve model directory relative to this script — no hardcoded paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -17,18 +18,12 @@ anx  = _load('model_anxiety.pkl')
 eat  = _load('model_eating.pkl')
 stress = _load('model_stress.pkl')
 
-def clean(text):
-    text = text.lower()
-    text = re.sub(r'http\S+', '', text)
-    text = re.sub(r'[^a-z\s]', '', text)
-    return re.sub(r'\s+', ' ', text).strip()
-
 def predict(text):
-    t = clean(text)
+    t = preprocess_text(text)  # for dep/anx/eating (plain TF-IDF pipelines)
 
-    # Emotion
-    emo_label = emo['label_encoder'].inverse_transform(emo['pipeline'].predict([t]))[0]
-    emo_conf  = emo['pipeline'].predict_proba([t]).max()
+    # Emotion — new pipeline handles preprocessing + VADER internally, takes raw text
+    emo_label = emo['label_encoder'].inverse_transform(emo['pipeline'].predict([text]))[0]
+    emo_conf  = emo['pipeline'].predict_proba([text]).max()
 
     # Depression
     dep_pred  = dep['pipeline'].predict([t])[0]

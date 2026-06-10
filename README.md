@@ -27,7 +27,7 @@ A machine learning system that detects mental-health and emotional signals from 
 - Trains **five independent classifiers** on separate datasets covering distinct mental-health and behavioral signals.
 - Handles **class imbalance** via stratified sampling and balanced class weights.
 - Returns **per-class probability distributions**, not just a single label — useful for borderline cases.
-- Includes a **command-line inference script**, a **Streamlit web app**, and a **React + FastAPI dashboard** for real-time text analysis.
+- Includes a **command-line inference script** and a **React + FastAPI dashboard** for real-time text analysis.
 
 ---
 
@@ -86,15 +86,14 @@ Real data work, documented honestly:
 │   ├── model_stress.pkl                           # Stress model (sensor-based)
 │   └── model_performance_summary.csv              # All metrics
 ├── predict.py                                     # CLI inference (text models)
-├── app.py                                         # Streamlit web app
-└── requirements.txt                               # Root dependencies (CLI + Streamlit)
+└── requirements.txt                               # Root dependencies (CLI)
 ```
 
 ---
 
 ## Setup & Running
 
-### Option 1 — CLI & Streamlit (root)
+### Option 1 — CLI Inference (root)
 
 ```bash
 git clone https://github.com/vanshikav312/Multiclass-Sentiment-Analysis.git
@@ -105,11 +104,6 @@ pip install -r requirements.txt
 Run the CLI inference tool:
 ```bash
 python predict.py
-```
-
-Run the Streamlit web app:
-```bash
-streamlit run app.py
 ```
 
 ---
@@ -145,7 +139,6 @@ Open `http://localhost:5173` in your browser.
 | Data | pandas 2.3.0, numpy 2.0.0 |
 | NLP Preprocessing | NLTK 3.9.4 — tokenization and stopword removal |
 | Visualizations | matplotlib, seaborn |
-| Classic Web UI | Streamlit |
 | Modern API | FastAPI + Uvicorn |
 | Modern Frontend | React 19, Vite 8, Lucide React |
 | Styling | Vanilla CSS — custom properties, glassmorphism, MindfulPalettes No. 96 |

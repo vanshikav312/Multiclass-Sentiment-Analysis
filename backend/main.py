@@ -1,6 +1,5 @@
 import sys
 import os
-import re
 import pickle
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -8,8 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-# Add local package library directory if necessary
-sys.path.insert(0, 'D:\\PythonPackages')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from preprocessing import preprocess_text
 
 # Setup paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,23 +49,20 @@ class AnalyzeRequest(BaseModel):
     text: str
 
 def clean_text(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r'http\S+', '', text)
-    text = re.sub(r'[^a-z\s]', '', text)
-    return re.sub(r'\s+', ' ', text).strip()
+    return preprocess_text(text)
 
 @app.post("/api/analyze")
 async def analyze_text(request: AnalyzeRequest):
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     
-    cleaned = clean_text(request.text)
-    
+    cleaned = clean_text(request.text)  # for dep/anx/eating
+
     results = {}
     try:
-        # 1. Emotion (multiclass)
+        # 1. Emotion — new pipeline takes raw text (preprocessing + VADER inside)
         m_emo = models['emotion']
-        probs_emo = m_emo['pipeline'].predict_proba([cleaned])[0]
+        probs_emo = m_emo['pipeline'].predict_proba([request.text])[0]
         results['emotion'] = dict(zip(m_emo['label_encoder'].classes_, [float(p) for p in probs_emo]))
         
         # 2. Depression (binary)

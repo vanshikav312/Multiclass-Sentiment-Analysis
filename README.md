@@ -1,6 +1,6 @@
-# Multi-Class NLP Mental Health & Emotion Classifier
+# MindScan — Multiclass Mental Health Sentiment Analyzer
 
-A machine learning system that detects mental-health and emotional signals from text across four dimensions — **emotion, depression, anxiety, and eating behavior** — using TF-IDF feature extraction with calibrated LinearSVC classifiers, trained end-to-end on five real-world datasets. A separate sensor-based stress model is included for completeness.
+A full-stack mental health sentiment analysis application that classifies text across four dimensions — **emotion, depression risk, anxiety risk, and eating behavior** — using a React + FastAPI interface backed by scikit-learn models trained on five real-world datasets.
 
 > **Note on scope:** This is a research and learning project for text-signal detection. It is **not** a diagnostic tool and should not be used for clinical or medical decision-making.
 
@@ -12,52 +12,69 @@ A machine learning system that detects mental-health and emotional signals from 
 |---|---|---|---|---|---|
 | Depression | 96.47% | 96.28% | 97.20% ± 0.37% | 2 | Text |
 | Anxiety | 96.58% | 96.58% | 96.58% ± 0.43% | 2 | Text |
-| Emotion | 94.44% | 93.81% | 94.54% ± 0.19% | 6 | Text |
+| Emotion | 91.53% | 91.52% | — | 6 | Text |
 | Eating Behavior | 100.00%\* | 100.00%\* | 100.00% ± 0.00% | 5 | Text |
 | Stress | 32.83% | 32.86% | 33.87% ± 1.32% | 3 | Sensor |
 
-\* **Eating-behavior 100% is reported honestly, not as a success claim.** The dataset is small (~1,000 rows, ~200 per class after cleaning) and the classes are cleanly separable, so perfect scores reflect dataset simplicity and a high overfitting risk — not real-world robustness. A larger, noisier test set would be needed to trust this number.
+\* **Eating-behavior 100% is reported honestly, not as a success claim.** The dataset is small (~1,000 rows) and cleanly separable — this number reflects dataset simplicity and high overfitting risk, not real-world robustness.
 
-**On the stress model:** it uses physiological sensor features (not text), so it is not part of the text-inference demo. Its low accuracy reflects a genuinely hard sensor-fusion task — see *Limitations* below.
+**On the stress model:** it uses physiological sensor features (not text) so it is excluded from the text-inference UI. Its low accuracy reflects a genuinely hard sensor-fusion task.
 
 ---
 
 ## What This Project Does
 
-- Trains **five independent classifiers** on separate datasets covering distinct mental-health and behavioral signals.
+- Trains **five independent classifiers** on separate datasets covering distinct mental-health signals.
 - Handles **class imbalance** via stratified sampling and balanced class weights.
 - Returns **per-class probability distributions**, not just a single label — useful for borderline cases.
-- Includes a **command-line inference script** and a **React + FastAPI dashboard** for real-time text analysis.
+- Includes a **CLI inference script** and a **React + FastAPI dashboard** for real-time text analysis.
+
+---
+
+## Preprocessing Pipeline
+
+All text goes through 15 steps in a shared `preprocessing.py` before reaching the model — the same function used at training time and inference time:
+
+1. Emoticon replacement (`:)` → `happy`)
+2. Lowercase
+3. Contraction expansion (`can't` → `cannot`)
+4. Slang normalization (`lol` → `laughing`, `tbh` → `to be honest`)
+5. URL and HTML tag removal
+6. Repeated character normalization (`sooooo` → `soo`)
+7. Negation handling (`not happy` → `not not_happy`, up to 3 words)
+8. Punctuation removal (preserving `not_` prefix tokens)
+9. Digit removal
+10. Whitespace normalization
+11. NLTK word tokenization
+12. Stopword removal (preserving negation tokens)
+13. POS-aware lemmatization
+14. Short token filtering (length > 2)
 
 ---
 
 ## Modeling Approach
 
-- **Text models (emotion, depression, anxiety, eating):** TF-IDF vectorization → **LinearSVC**, wrapped in `CalibratedClassifierCV` to produce calibrated probabilities alongside class labels.
-- **Why LinearSVC:** the vocabulary overlap between classes (e.g. depressed vs. non-depressed text) is high, so a maximum-margin linear boundary separates the classes more reliably than a plain logistic boundary, while remaining fast and interpretable on high-dimensional sparse text features.
-- **Stress model:** structured physiological/sensor features (sleep duration, skin conductance, screen time, mobility, Big Five personality scores) → **Random Forest**, chosen because the signal lives in nonlinear interactions between features rather than any single feature.
+- **Emotion model:** TF-IDF + VADER sentiment scores (compound, positive, negative, neutral) → Logistic Regression. VADER features on raw text improve detection on short and conversational sentences.
+- **Depression, Anxiety, Eating models:** TF-IDF → Logistic Regression with balanced class weights.
+- **Stress model:** physiological/sensor features → Random Forest (not used in text inference).
 
 ---
 
-## Problems Diagnosed and Fixed During Development
+## UI Features
 
-Real data work, documented honestly:
-
-- **Emotion dataset class imbalance** — one class dominated the raw data (~422k rows unbalanced), biasing predictions; fixed by capping each class to 15,000 samples with stratified sampling.
-- **Anxiety dataset had no negative class** — the source contained only positive (anxious) examples; negatives were approximated using non-distressed text from the depression dataset. *(Honest limitation: the model partly learns "anxious vs. normal-language" — see Limitations.)*
-- **Depression length bias** — depressed and non-depressed samples differed sharply in average text length, so the model was partly learning length instead of content; mitigated by truncation and balanced sampling to 3,000 per class.
-- **Eating-behavior label noise** — inconsistent casing and whitespace in labels; normalized during preprocessing.
-- **pandas 2.x breaking change** — `groupby().apply()` behavior changed; fixed aggregation logic.
-- **Non-interactive notebook execution** — `input()` cells replaced with default fallback for headless execution via `nbconvert`.
+- **Disclaimer banner** — prominently displayed at the top on every visit, clarifying this is not a medical tool
+- **Input validation** — button disabled and amber warning shown when input is under 5 words
+- **Confidence threshold** — emotion result shows **"Uncertain"** when top confidence is below 55%, preventing the model from displaying a wrong label with false confidence
+- **Label corrections** — training data typo `suprise` is displayed as `Surprise` everywhere in the UI
 
 ---
 
 ## Limitations
 
-- **Eating-behavior 100% accuracy** is on a small, cleanly-separable dataset and almost certainly reflects overfitting / dataset simplicity rather than real-world performance.
-- **Anxiety negatives are approximated** from non-distressed text (no true negatives existed in the source), which biases what the model actually learns.
-- **Implicit emotion and sarcasm** are not reliably captured — e.g. sarcastic positive-sounding text can be misclassified as positive.
-- **Stress detection (sensor data)** is the weakest model; structured sensor fusion is a harder problem than the text tasks with the available dataset size (~3,000 rows).
+- **Eating-behavior 100% accuracy** almost certainly reflects overfitting on a small, cleanly-separable dataset.
+- **Anxiety dataset has no negative examples** in the source data — the model was trained only on anxious text, which limits its ability to distinguish anxious from non-anxious input reliably.
+- **Implicit emotion and sarcasm** are not reliably captured — e.g. "I'm so done" or sarcastic positive text can be misclassified.
+- **Short, vague sentences** (e.g. "I feel weird") may produce low-confidence or incorrect predictions due to sparse TF-IDF features.
 - This is a **research project**, not a validated diagnostic system.
 
 ---
@@ -66,67 +83,116 @@ Real data work, documented honestly:
 
 ```
 ├── backend/
-│   ├── main.py                                    # FastAPI server, endpoints, and model loading
-│   └── requirements.txt                           # Backend dependencies (fastapi, uvicorn, etc.)
+│   ├── main.py                                    # FastAPI server — /api/analyze, /api/metrics, /api/explain
+│   └── requirements.txt
 ├── frontend/
-│   ├── package.json                               # React + Vite configuration
-│   ├── src/
-│   │   ├── App.jsx                                # Main dashboard shell and sidebar navigation
-│   │   ├── index.css                              # Glassmorphic dark theme (MindfulPalettes No. 96)
-│   │   └── components/
-│   │       ├── Analyzer.jsx                       # Interactive sentiment input and results gauge
-│   │       └── Dashboard.jsx                      # Evaluation metrics charts and explanations
-│   └── vite.config.js                             # Vite setup
+│   ├── package.json                               # React + Vite (npm run dev:all starts both)
+│   └── src/
+│       ├── App.jsx
+│       ├── index.css
+│       └── components/
+│           ├── Analyzer.jsx                       # Text input + live results
+│           └── Dashboard.jsx                      # Evaluation metrics + charts
 ├── notebook/
 │   ├── nlp_multiclass_sentiment_analysis.ipynb   # Full training pipeline
-│   ├── model_emotion.pkl                          # Emotion classifier (6 classes)
-│   ├── model_depression.pkl                       # Depression classifier
-│   ├── model_anxiety.pkl                          # Anxiety classifier
-│   ├── model_eating.pkl                           # Eating-behavior classifier
-│   ├── model_stress.pkl                           # Stress model (sensor-based)
-│   └── model_performance_summary.csv              # All metrics
-├── predict.py                                     # CLI inference (text models)
-└── requirements.txt                               # Root dependencies (CLI)
+│   ├── model_emotion.pkl                          # Emotion classifier (TF-IDF + VADER)
+│   ├── model_depression.pkl
+│   ├── model_anxiety.pkl
+│   ├── model_eating.pkl
+│   ├── model_stress.pkl
+│   └── model_performance_summary.csv
+├── preprocessing.py                               # Shared preprocess_text() — training and inference
+├── predict.py                                     # CLI inference script
+├── retrain_emotion.py                             # Retrain script for emotion model
+└── dataset/                                       # Raw CSVs for all 5 tasks
 ```
 
 ---
 
 ## Setup & Running
 
-### Option 1 — CLI Inference (root)
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+
+### Install Python dependencies
 
 ```bash
-git clone https://github.com/vanshikav312/Multiclass-Sentiment-Analysis.git
-cd Multiclass-Sentiment-Analysis
-pip install -r requirements.txt
+pip install fastapi uvicorn scikit-learn nltk pandas numpy vaderSentiment
 ```
 
-Run the CLI inference tool:
+NLTK data downloads automatically on first run.
+
+### Install frontend dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+### Run both together (one command)
+
+```bash
+cd frontend
+npm run dev:all
+```
+
+- Frontend → [http://localhost:5173](http://localhost:5173)
+- API → [http://localhost:8000](http://localhost:8000)
+
+> The backend may take 1–2 minutes on first startup while loading models and NLTK data.
+
+### Run separately
+
+**Backend:**
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+### CLI mode
+
 ```bash
 python predict.py
 ```
 
 ---
 
-### Option 2 — React + FastAPI Dashboard
+## API Reference
 
-A modern, dark-themed dashboard styled with glassmorphic panels and the custom MindfulPalettes No. 96 design system.
+### `POST /api/analyze`
 
-**Step 1 — Start the FastAPI backend:**
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
+```json
+{ "text": "I have been feeling really anxious and overwhelmed lately." }
 ```
 
-**Step 2 — Start the React frontend (new terminal):**
-```bash
-cd frontend
-npm install
-npm run dev
+**Response:**
+```json
+{
+  "text": "...",
+  "cleaned_text": "...",
+  "results": {
+    "emotion":    { "fear": 0.81, "sad": 0.09, "anger": 0.04, "joy": 0.03, "love": 0.02, "surprise": 0.01 },
+    "depression": { "Depressed": 0.76, "Not Depressed": 0.24 },
+    "anxiety":    { "Anxious": 0.63, "Not Anxious": 0.37 },
+    "eating":     { "emotional": 0.72, "normal": 0.18, "anxiety": 0.06, "obesity": 0.03, "healthy eating": 0.01 }
+  }
+}
 ```
 
-Open `http://localhost:5173` in your browser.
+### `GET /api/metrics`
+
+Returns model performance summary (accuracy, F1, cross-validation scores).
+
+### `GET /api/explain`
+
+Returns plain-English explanation of each model's strengths and limitations.
 
 ---
 
@@ -134,32 +200,29 @@ Open `http://localhost:5173` in your browser.
 
 | Layer | Technology |
 |---|---|
-| ML Models | scikit-learn 1.5+ — TF-IDF, LinearSVC, CalibratedClassifierCV, Random Forest |
-| Language | Python 3.13.3 |
-| Data | pandas 2.3.0, numpy 2.0.0 |
-| NLP Preprocessing | NLTK 3.9.4 — tokenization and stopword removal |
-| Visualizations | matplotlib, seaborn |
-| Modern API | FastAPI + Uvicorn |
-| Modern Frontend | React 19, Vite 8, Lucide React |
-| Styling | Vanilla CSS — custom properties, glassmorphism, MindfulPalettes No. 96 |
+| ML Models | scikit-learn — TF-IDF, Logistic Regression, FeatureUnion |
+| NLP | NLTK, VADER Sentiment |
+| Backend | FastAPI, Uvicorn |
+| Frontend | React 19, Vite 8, Lucide React |
+| Language | Python 3.11+ |
 
 ---
 
 ## Datasets
 
-| Dataset | Source | Rows (after cleaning) | Classes |
+| Dataset | Source | Rows | Classes |
 |---|---|---|---|
 | Emotion | Kaggle — tweet emotion dataset | ~87,000 | 6 (joy, sadness, anger, fear, love, surprise) |
-| Depression | Reddit mental-health posts (Kaggle) | ~7,600 | 2 (depressed / not depressed) |
-| Anxiety | Reddit anxiety subreddit (Kaggle) | ~3,700 | 2 (anxious / not anxious) |
-| Eating Behavior | Kaggle eating disorder text dataset | ~1,000 | 5 |
-| Stress (Sensor) | Physiological + behavioral sensor dataset | ~3,000 | 3 (low / medium / high) |
+| Depression | Reddit mental-health posts | ~7,600 | 2 |
+| Anxiety | Reddit anxiety subreddit | ~3,700 | 2 |
+| Eating Behavior | Kaggle eating disorder dataset | ~1,000 | 5 |
+| Stress (Sensor) | Physiological + behavioral sensor dataset | ~3,000 | 3 |
 
 ---
 
 ## Author
 
-**Vanshika Valecha** — [GitHub](https://github.com/vanshikav312)
+**Vanshika** — [GitHub](https://github.com/vanshikav312)
 
 ## License
 

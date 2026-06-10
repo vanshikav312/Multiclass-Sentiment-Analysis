@@ -27,7 +27,7 @@ A machine learning system that detects mental-health and emotional signals from 
 - Trains **five independent classifiers** on separate datasets covering distinct mental-health and behavioral signals.
 - Handles **class imbalance** via stratified sampling and balanced class weights.
 - Returns **per-class probability distributions**, not just a single label — useful for borderline cases.
-- Includes a **command-line inference script** and a **Streamlit web app** for real-time text analysis.
+- Includes a **command-line inference script**, a **Streamlit web app**, and a **React + FastAPI dashboard** for real-time text analysis.
 
 ---
 
@@ -60,6 +60,8 @@ Real data work, documented honestly:
 - **Stress detection (sensor data)** is the weakest model; structured sensor fusion is a harder problem than the text tasks with the available dataset size (~3,000 rows).
 - This is a **research project**, not a validated diagnostic system.
 
+---
+
 ## Project Structure
 
 ```
@@ -70,7 +72,7 @@ Real data work, documented honestly:
 │   ├── package.json                               # React + Vite configuration
 │   ├── src/
 │   │   ├── App.jsx                                # Main dashboard shell and sidebar navigation
-│   │   ├── index.css                              # Glassmorphic dark theme variables (MindfulPalettes No. 96)
+│   │   ├── index.css                              # Glassmorphic dark theme (MindfulPalettes No. 96)
 │   │   └── components/
 │   │       ├── Analyzer.jsx                       # Interactive sentiment input and results gauge
 │   │       └── Dashboard.jsx                      # Evaluation metrics charts and explanations
@@ -85,74 +87,68 @@ Real data work, documented honestly:
 │   └── model_performance_summary.csv              # All metrics
 ├── predict.py                                     # CLI inference (text models)
 ├── app.py                                         # Streamlit web app
-└── requirements.txt
+└── requirements.txt                               # Root dependencies (CLI + Streamlit)
 ```
 
 ---
 
-## Setup & Running Instructions
+## Setup & Running
 
-### 1. Classic App Options
+### Option 1 — CLI & Streamlit (root)
 
-**Install Requirements:**
 ```bash
 git clone https://github.com/vanshikav312/Multiclass-Sentiment-Analysis.git
 cd Multiclass-Sentiment-Analysis
 pip install -r requirements.txt
 ```
 
-**Run CLI Inference:**
+Run the CLI inference tool:
 ```bash
 python predict.py
 ```
 
-**Run Streamlit App:**
+Run the Streamlit web app:
 ```bash
 streamlit run app.py
 ```
 
-### 2. Modern React + FastAPI Dashboard
+---
 
-A modern, high-fidelity dark-themed web application styled with glassmorphic panels and standard CSS utilizing the custom "MindfulPalettes No. 96" design system.
+### Option 2 — React + FastAPI Dashboard
 
-#### Run FastAPI Backend:
-1. Navigate to the `backend/` directory:
-   ```bash
-   cd backend
-   ```
-2. Install python packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the development server:
-   ```bash
-   python -m uvicorn main:app --reload --port 8000
-   ```
+A modern, dark-themed dashboard styled with glassmorphic panels and the custom MindfulPalettes No. 96 design system.
 
-#### Run React Frontend:
-1. Navigate to the `frontend/` directory:
-   ```bash
-   cd ../frontend
-   ```
-2. Install Node packages:
-   ```bash
-   npm install
-   ```
-3. Start the Vite server:
-   ```bash
-   npm run dev
-   ```
-4. Access the web app in your browser at `http://localhost:5173`.
+**Step 1 — Start the FastAPI backend:**
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn main:app --reload --port 8000
+```
 
+**Step 2 — Start the React frontend (new terminal):**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser.
+
+---
 
 ## Tech Stack
 
-- **Python 3.13.3**
-- **scikit-learn (1.5+)** — TF-IDF, LinearSVC, CalibratedClassifierCV, Random Forest
-- **pandas 2.3.0 / numpy 2.0.0** — data cleaning and preprocessing
-- **NLTK 3.9.4** — tokenization and stopword removal (used in training pipeline)
-- **Streamlit** — interactive web interface
-- **matplotlib / seaborn** — evaluation visualizations
+| Layer | Technology |
+|---|---|
+| ML Models | scikit-learn 1.5+ — TF-IDF, LinearSVC, CalibratedClassifierCV, Random Forest |
+| Language | Python 3.13.3 |
+| Data | pandas 2.3.0, numpy 2.0.0 |
+| NLP Preprocessing | NLTK 3.9.4 — tokenization and stopword removal |
+| Visualizations | matplotlib, seaborn |
+| Classic Web UI | Streamlit |
+| Modern API | FastAPI + Uvicorn |
+| Modern Frontend | React 19, Vite 8, Lucide React |
+| Styling | Vanilla CSS — custom properties, glassmorphism, MindfulPalettes No. 96 |
 
 ---
 

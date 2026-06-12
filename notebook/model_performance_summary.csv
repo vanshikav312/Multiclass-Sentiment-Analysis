@@ -1,6 +1,5 @@
 Model,Test Accuracy,F1 Score (macro),5-Fold CV Mean,5-Fold CV Std,No. Classes
-Depression,0.9647,0.9628,0.9720,Â±0.0037,2
-Emotion,0.9444,0.9381,0.9454,Â±0.0019,6
-Eating Behavior,1.0000,1.0000,1.0000,Â±0.0000,5
-Anxiety,0.9658,0.9658,0.9658,Â±0.0043,2
-Stress (Sensor),0.3283,0.3286,0.3387,Â±0.0132,3
+Depression,0.9647,0.9628,0.972,Â±0.0037,2
+Emotion,0.9153,0.9152,0.8963,+/-0.0015,6
+Eating Behavior,1.0,1.0,1.0,+/-0.0000,5
+Anxiety,0.9778,0.9778,0.9724,+/-0.0036,2

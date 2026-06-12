@@ -3,6 +3,14 @@ import { Sparkles, Brain, AlertCircle, RefreshCw, Info } from 'lucide-react';
 
 const CONFIDENCE_THRESHOLD = 0.55;
 
+const EXAMPLES = [
+  "I've been feeling really low and hopeless lately",
+  "Everything makes me anxious, I can't stop worrying",
+  "I'm so excited about my new job!",
+  "I've been stress-eating a lot recently",
+  "I feel like nobody understands me",
+];
+
 const fixLabel = (label) => {
   const fixes = { suprise: 'Surprise', surprise: 'Surprise' };
   return fixes[label.toLowerCase()] ?? (label.charAt(0).toUpperCase() + label.slice(1));
@@ -104,6 +112,29 @@ export default function Analyzer() {
         <span style={{ fontSize: '13px', color: '#fde68a', lineHeight: '1.5' }}>
           <strong>Not a medical tool.</strong> MindScan is a research project for educational purposes only. Results are ML predictions and should not be used for clinical or diagnostic decisions. If you are in distress, please speak to a qualified professional.
         </span>
+      </div>
+
+      {/* Example prompts */}
+      <div>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Try an example</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex}
+              onClick={() => { setText(ex); setResults(null); setError(null); }}
+              style={{
+                padding: '6px 14px', borderRadius: '100px', border: '1px solid rgba(202,63,22,0.25)',
+                background: 'rgba(202,63,22,0.06)', color: 'var(--text-secondary)',
+                fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-body)',
+                transition: 'var(--transition-fast)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-orange)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(202,63,22,0.25)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Input panel */}

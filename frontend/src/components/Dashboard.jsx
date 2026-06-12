@@ -50,7 +50,6 @@ export default function Dashboard() {
     if (modelName.toLowerCase().includes('emotion')) return 'Emotion';
     if (modelName.toLowerCase().includes('eating')) return 'Eating Behavior';
     if (modelName.toLowerCase().includes('anxiety')) return 'Anxiety';
-    if (modelName.toLowerCase().includes('stress')) return 'Stress (Sensor)';
     return null;
   };
 
@@ -64,10 +63,9 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="glass-panel" style={{ padding: '24px', borderColor: 'var(--color-crimson)', color: 'var(--text-primary)' }}>
-        <h3 style={{ marginBottom: '8px' }}>Dashboard Connection Error</h3>
-        <p style={{ color: 'var(--text-secondary)' }}>{error}</p>
-        <p style={{ fontSize: '13px', marginTop: '16px', color: 'var(--text-muted)' }}>Make sure the FastAPI server is running on port 8000.</p>
+      <div className="glass-panel" style={{ padding: '24px', borderColor: 'rgba(251,191,36,0.3)', color: 'var(--text-primary)', background: 'rgba(251,191,36,0.04)' }}>
+        <h3 style={{ marginBottom: '8px', color: '#fde68a' }}>Loading models + data — takes 1–2 minutes on first run.</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Please wait a moment, then refresh the page.</p>
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import pickle
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -104,10 +105,20 @@ async def get_metrics():
     
     try:
         df = pd.read_csv(csv_path)
-        # Handle non-standard characters like +/- sign
-        df = df.replace({'±': '+/-'}, regex=True)
-        # Convert df columns to lower-camel-case or friendly names
-        records = df.to_dict(orient="records")
+        raw_records = df.to_dict(orient='records')
+        
+        import math
+        records = []
+        for r in raw_records:
+            clean_r = {}
+            for k, v in r.items():
+                if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+                    clean_r[k] = None
+                elif isinstance(v, str):
+                    clean_r[k] = v.replace('Â±', '+/-').replace('Â+/-', '+/-').replace('±', '+/-')
+                else:
+                    clean_r[k] = v
+            records.append(clean_r)
         return records
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading performance summary: {e}")
@@ -120,20 +131,16 @@ async def get_explain():
             "why": "Clinical depression posts contain highly localized vocabulary like 'feeling hopeless', 'can't get out of bed', 'empty', or 'numb'. There is very little vocabulary overlap with standard control groups, allowing linear/logistic classifiers with TF-IDF representations to separate depressed from non-depressed users with high accuracy (96.5%)."
         },
         "Emotion": {
-            "summary": "Captures standard human sentiment states (joy, sadness, anger, fear, surprise, disgust) from explicitly emotional training sets.",
-            "why": "The underlying datasets consist of tweets or diary logs containing explicit emotional statements. Classifiers easily identify distinct terms (e.g. 'furious' for anger, 'scared' for fear, 'thrilled' for joy). The 94.4% accuracy is highly robust, though minor classification overlap occurs in highly nuanced text where emotions blend (e.g., fear and anger)."
+            "summary": "Captures six sentiment states (anger, fear, joy, love, sadness, surprise) from tweet-sourced training data.",
+            "why": "Trained on ~90k balanced tweet samples across six classes: anger, fear, joy, love, sad, surprise. A TF-IDF + VADER feature union feeds a Logistic Regression classifier, achieving 91.5% test accuracy and 89.6% 5-fold CV accuracy. The gap between test and CV reflects slight distribution shift across folds. Note: the training data labels exhaustion and overwhelm as 'surprise' following Twitter annotation conventions — this is a dataset artefact, not a model error."
         },
         "Eating Behavior": {
-            "summary": "Distinguishes between selective eating disorders, healthy eating, and clinical eating concerns.",
-            "why": "The model reaches 100% accuracy, which indicates the training data was highly structured, small, or template-based with very specific terminology (e.g., 'calorie count', 'binge', 'purge', 'healthy diet'). While perfect on the test split, it might show overfitting behaviors on real-world inputs that don't match these exact word lists."
+            "summary": "Classifies eating-related text into five categories: normal, emotional, obesity, anxiety, stress.",
+            "why": "The dataset is small (~1,004 rows after deduplication), perfectly balanced (200 per class), and highly template-like. Near-duplicate analysis shows 73% of test texts have cosine similarity > 0.8 to a training text, and 9.5% are exact matches. The 100% accuracy reflects dataset separability and near-duplicate leakage, not real-world robustness. 5-fold CV is also 100% ± 0.000, confirming the pattern is consistent but likely reflects memorization."
         },
         "Anxiety": {
             "summary": "Identifies somatic panic and generalized anxiety markers.",
-            "why": "Anxiety indicators are highly verbalized in peer-support forums. Frequent descriptions of physical stress (e.g. 'panic attack', 'chest tightens', 'shaking') and cognitive loops ('racing thoughts', 'constant worry') create prominent TF-IDF peaks. Consequently, the linear classifier achieves 96.6% accuracy."
-        },
-        "Stress (Sensor)": {
-            "summary": "Attempts to classify physiological stress levels (3 classes) from physical sensors.",
-            "why": "Sensor readings (like Heart Rate Variability, Galvanic Skin Response, and skin temperature) are highly noisy, subjective, and vary widely from person to person. Without personalized calibrations or sequential deep learning (like LSTMs), standard static classifiers achieve only 32.8% accuracy, which is close to a random 33.3% baseline."
+            "why": "Anxiety indicators are highly verbalized in peer-support forums. Frequent descriptions of physical symptoms ('panic attack', 'heart races', 'can't breathe') and cognitive loops ('racing thoughts', 'constant worry') create strong TF-IDF signals. The model was trained on a balanced set of 3,713 anxious posts and 3,713 non-anxious examples approximated from non-distressed posts in a depression dataset. LinearSVC with balanced class weights achieves 97.8% test accuracy and 97.2% 5-fold CV macro F1."
         }
     }
 

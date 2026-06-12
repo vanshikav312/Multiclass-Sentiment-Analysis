@@ -2,10 +2,22 @@
 .ipynb_checkpoints/
 __pycache__/
 
-# Ignore large datasets and images
+# Raw datasets — stored at D:/Projects/datasets_archive/multiclass-sentimental-analysis/
+dataset/
 *.csv
+
+# Keep the performance summary CSV (used by API)
+!notebook/model_performance_summary.csv
+
+# Notebook visualisations (generated artefacts — regenerate from notebook)
 *.png
 *.webp
 
-# Keep the performance summary CSV required by the API
-!notebook/model_performance_summary.csv
+# Ignore local NLTK data downloads
+nltk_data/
+
+# Python / Node
+.venv/
+node_modules/
+dist/
+*.pyc

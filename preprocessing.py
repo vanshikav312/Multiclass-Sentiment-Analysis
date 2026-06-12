@@ -1,14 +1,20 @@
 import re
 import string
+import os
 
 import nltk
-nltk.download('punkt',                      quiet=True)
-nltk.download('stopwords',                  quiet=True)
-nltk.download('wordnet',                    quiet=True)
-nltk.download('omw-1.4',                    quiet=True)
-nltk.download('punkt_tab',                  quiet=True)
-nltk.download('averaged_perceptron_tagger', quiet=True)
-nltk.download('averaged_perceptron_tagger_eng', quiet=True)
+# Use project-local nltk_data first to avoid OS junction/symlink security violations
+_NLTK_LOCAL = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'nltk_data')
+_NLTK_USER  = os.path.join(os.path.expanduser('~'), 'AppData', 'Roaming', 'nltk_data')
+nltk.data.path = [_NLTK_LOCAL, _NLTK_USER]
+
+nltk.download('punkt',                          quiet=True, download_dir=_NLTK_LOCAL)
+nltk.download('stopwords',                      quiet=True, download_dir=_NLTK_LOCAL)
+nltk.download('wordnet',                        quiet=True, download_dir=_NLTK_LOCAL)
+nltk.download('omw-1.4',                        quiet=True, download_dir=_NLTK_LOCAL)
+nltk.download('punkt_tab',                      quiet=True, download_dir=_NLTK_LOCAL)
+nltk.download('averaged_perceptron_tagger',     quiet=True, download_dir=_NLTK_LOCAL)
+nltk.download('averaged_perceptron_tagger_eng', quiet=True, download_dir=_NLTK_LOCAL)
 
 from nltk.corpus import stopwords, wordnet
 from nltk.tokenize import word_tokenize
